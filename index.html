@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Valentine Week - Our Secret</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="page page-auth">
+    <div class="sky" aria-hidden="true">
+      <span>✦</span><span>✦</span><span>✦</span><span>✦</span><span>✦</span>
+      <span>♡</span><span>♡</span><span>♡</span><span>♡</span><span>♡</span>
+    </div>
+    <div class="heart-field" aria-hidden="true"></div>
+    <div class="shooting-stars" aria-hidden="true"></div>
+    <main class="shell">
+      <section class="card auth-card">
+        <div class="badge">🌻 Sunflower of Love</div>
+        <h1>My Sunflower Baby</h1>
+        <p class="poem">
+          Like a sunflower that always turns its face towards the sun,<br />
+          I find myself always turning towards you.
+        </p>
+
+        <form id="auth-form" class="auth-form" novalidate>
+          <label for="secret-answer" class="label">
+            My Love, what was the name of the first theater we went together?
+          </label>
+          <input
+            id="secret-answer"
+            name="answer"
+            type="text"
+            placeholder="Type it here"
+            autocomplete="off"
+            required
+          />
+          <p id="auth-error" class="error hidden">
+            Bhuli Bhuli? Try again?
+          </p>
+          <button type="submit" class="primary-btn auth-unlock-btn">
+            Unlock the surprise
+          </button>
+        </form>
+
+        <p class="hint"><em>The day we held hands for the first time.</em></p>
+        <p
+          id="easter-egg"
+          class="easter-egg hidden"
+          data-message="Secret petal unlocked: you + me = forever."
+        ></p>
+      </section>
+    </main>
+
+    <img
+      class="sunflower-bottom"
+      src="assets/sunflower-field.png"
+      alt=""
+      aria-hidden="true"
+    />
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

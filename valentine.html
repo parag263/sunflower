@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Will You Be My Valentine?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="page page-valentine">
+    <div class="sky" aria-hidden="true">
+      <span>✦</span><span>✦</span><span>✦</span><span>✦</span><span>✦</span>
+      <span>♡</span><span>♡</span><span>♡</span><span>♡</span><span>♡</span>
+    </div>
+    <div class="heart-field" aria-hidden="true"></div>
+    <div class="shooting-stars" aria-hidden="true"></div>
+    <div class="moon-bg" aria-hidden="true"></div>
+    <main class="shell">
+      <section class="card valentine-card">
+        <div class="badge">For My Moon 🌙</div>
+        <h1>Dear Moon, will you be my Valentine?</h1>
+
+        <div class="button-row">
+          <button id="yes-btn" class="primary-btn">Yes, always!</button>
+          <button id="no-btn" class="ghost-btn">Let me think…</button>
+        </div>
+
+        <p id="no-message" class="no-message hidden" aria-live="polite">
+          404: "No" not found… only "Us" exists here. 💜
+        </p>
+
+        <div id="dog-scene" class="dog-scene hidden" aria-hidden="true">
+          <div class="dog">
+            <div class="dog-body">
+              <div class="dog-head">
+                <div class="dog-ear left"></div>
+                <div class="dog-ear right"></div>
+                <div class="dog-face">
+                  <div class="dog-eye left"></div>
+                  <div class="dog-eye right"></div>
+                  <div class="dog-nose"></div>
+                  <div class="dog-tongue"></div>
+                </div>
+              </div>
+              <div class="dog-torso"></div>
+              <div class="dog-collar"></div>
+              <p class="dog-name">Kiya</p>
+              <div class="dog-tail"></div>
+              <div class="dog-leg front-left"></div>
+              <div class="dog-leg front-right"></div>
+              <div class="dog-leg back-left"></div>
+              <div class="dog-leg back-right"></div>
+            </div>
+            <div class="dog-heart">❤</div>
+          </div>
+        </div>
+
+        <div id="answer-card" class="answer-card postcard hidden" aria-live="polite">
+          <div class="postcard-inner">
+            <!-- Left side: message -->
+            <div class="postcard-message">
+              <p class="postcard-greeting">My Dearest Moon,</p>
+              <p class="postcard-body">This card is proof — you said <em>Yes</em>, and my heart has never been happier.</p>
+              <p class="postcard-sign">— Yours, always & forever 💌</p>
+            </div>
+            <!-- Right side: address + stamp -->
+            <div class="postcard-address">
+              <div class="postcard-stamp">
+                <span class="stamp-heart">❤</span>
+                <span class="stamp-text">LOVE</span>
+                <span class="stamp-year">2026</span>
+              </div>
+              <div class="postcard-to">
+                <p class="postcard-label">DELIVERED TO:</p>
+                <p class="postcard-recipient">My Beautiful Valentine</p>
+                <p class="postcard-addr">Beating Heart&bull; Forever City</p>
+              </div>
+              <div class="postcard-barcode" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <p class="postcard-tracking">TRACKING: LOVE-14FEB-2026-FOREVER</p>
+            </div>
+          </div>
+          <div class="postcard-footer">
+            <p class="postcard-sent">✓ Sent with love — Valentine's Card Delivered</p>
+            <p id="already-agreed" class="tiny-note hidden">
+              You already agreed earlier — try again just for fun.
+            </p>
+            <button id="try-again" class="secondary-btn try-again-btn">try again</button>
+          </div>
+        </div>
+        <p
+          id="easter-egg"
+          class="easter-egg hidden"
+          data-message="You found the hidden moonlight in my heart."
+        ></p>
+      </section>
+    </main>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
