@@ -33,6 +33,7 @@ const AUTH_OK_KEY = "valentine-auth-ok";
 const ANSWER_KEY = "valentine-final-answer";
 const ANSWER_LINK_KEY = "valentine-answer-link";
 const INTRO_SEEN_KEY = "valentine-intro-seen";
+const INTRO_MUSIC_KEY = "introMusicCurrentTime";
 const SECRET_ANSWER = "shootthecameraman";
 
 /* ---- DOM refs ---- */
@@ -488,9 +489,129 @@ const triggerPizzaEasterEgg = () => {
 /* ---- Cinematic page transition ---- */
 
 const navigateWithFade = (url) => {
+  const introMusic = document.getElementById("intro-music");
+  if (introMusic) setIntroMusicStoredTime(introMusic.currentTime);
   document.body.classList.add("page-exit");
   window.setTimeout(() => { window.location.href = url; }, 650);
 };
+
+/* ---- Intro music: resume across pages, fade out 17s after Yes over 5s ---- */
+const INTRO_MUSIC_FADE_MS = 5000;
+const INTRO_MUSIC_STOP_AFTER_YES_MS = 17000;
+let introMusicPositionIntervalId = null;
+
+const setIntroMusicStoredTime = (t) => {
+  const s = String(t);
+  try { localStorage.setItem(INTRO_MUSIC_KEY, s); sessionStorage.setItem(INTRO_MUSIC_KEY, s); } catch (e) { /* */ }
+};
+const getIntroMusicStoredTime = () => {
+  try {
+    const L = localStorage.getItem(INTRO_MUSIC_KEY);
+    const S = sessionStorage.getItem(INTRO_MUSIC_KEY);
+    if (L != null && L !== "") return L;
+    if (S != null && S !== "") return S;
+  } catch (e) { /* */ }
+  return null;
+};
+const clearIntroMusicStoredTime = () => {
+  try { localStorage.removeItem(INTRO_MUSIC_KEY); sessionStorage.removeItem(INTRO_MUSIC_KEY); } catch (e) { /* */ }
+};
+
+const saveIntroMusicPosition = () => {
+  const el = document.getElementById("intro-music");
+  if (el && !el.paused) setIntroMusicStoredTime(el.currentTime);
+};
+
+const getIntroMusicEl = () => {
+  let el = document.getElementById("intro-music");
+  if (el) return el;
+  const saved = getIntroMusicStoredTime();
+  if (saved == null || saved === "") return null;
+  const startTime = parseFloat(saved, 10);
+  el = document.createElement("audio");
+  el.id = "intro-music";
+  el.loop = true;
+  el.preload = "auto";
+  el.style.display = "none";
+  const src = document.createElement("source");
+  src.src = "assets/intro-song.mp3";
+  src.type = "audio/mpeg";
+  el.appendChild(src);
+  el.volume = 0.18;
+  document.body.appendChild(el);
+  let played = false;
+  const playOnce = () => {
+    if (played) return;
+    played = true;
+    el.play().catch(() => {});
+  };
+  const applyPositionAndPlay = () => {
+    const seekTime = Number.isFinite(startTime) && startTime > 0 ? startTime : 0;
+    if (seekTime > 0) {
+      el.currentTime = seekTime;
+      el.addEventListener("seeked", playOnce, { once: true });
+      window.setTimeout(playOnce, 1200);
+    } else {
+      playOnce();
+    }
+  };
+  el.addEventListener("loadedmetadata", () => {
+    const t = Number.isFinite(startTime) && startTime > 0 ? Math.min(startTime, el.duration || startTime) : 0;
+    if (t > 0) el.currentTime = t;
+  }, { once: true });
+  if (el.readyState >= 2) {
+    applyPositionAndPlay();
+  } else {
+    el.addEventListener("canplay", applyPositionAndPlay, { once: true });
+  }
+  if (introMusicPositionIntervalId != null) clearInterval(introMusicPositionIntervalId);
+  introMusicPositionIntervalId = setInterval(() => {
+    if (!document.getElementById("intro-music")) {
+      clearInterval(introMusicPositionIntervalId);
+      introMusicPositionIntervalId = null;
+      return;
+    }
+    saveIntroMusicPosition();
+  }, 1500);
+  return el;
+};
+
+const resumeIntroMusicIfNeeded = () => {
+  if (getIntroMusicStoredTime() == null) return;
+  getIntroMusicEl();
+  window.addEventListener("pagehide", saveIntroMusicPosition);
+};
+
+const fadeOutIntroMusic = (durationMs) => {
+  if (introMusicPositionIntervalId != null) {
+    clearInterval(introMusicPositionIntervalId);
+    introMusicPositionIntervalId = null;
+  }
+  const el = document.getElementById("intro-music");
+  if (!el) {
+    clearIntroMusicStoredTime();
+    return;
+  }
+  const startVol = el.volume;
+  const start = performance.now();
+  const tick = (now) => {
+    const elapsed = now - start;
+    if (elapsed >= durationMs) {
+      el.volume = 0;
+      el.pause();
+      el.currentTime = 0;
+      clearIntroMusicStoredTime();
+      return;
+    }
+    el.volume = Math.max(0, startVol * (1 - elapsed / durationMs));
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+};
+
+if (document.body.classList.contains("page-auth") || document.body.classList.contains("page-valentine")) {
+  resumeIntroMusicIfNeeded();
+}
 
 if (authForm && answerInput) {
   // If intro hasn't been seen yet, redirect to intro
@@ -559,6 +680,9 @@ if (yesBtn && !hasSavedYes()) {
     revealAnswerCard();
 
     try { await notifyYesToFirebase("Yes"); } catch (e) { /* */ }
+
+    // Intro song: fade out over 5s starting 17s after Yes
+    window.setTimeout(() => fadeOutIntroMusic(INTRO_MUSIC_FADE_MS), INTRO_MUSIC_STOP_AFTER_YES_MS);
 
     // Pizza easter egg 17s later
     window.setTimeout(triggerPizzaEasterEgg, 17000);
@@ -1419,164 +1543,209 @@ const triggerMapEasterEgg = () => {
   overlay.className = "map-ee-overlay";
   overlay.style.cssText = `
     position: fixed; inset: 0; z-index: 10001;
-    background: #0a0a0f;
+    background: radial-gradient(ellipse at 50% 40%, #120a10 0%, #0a0a0e 70%);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     opacity: 0; transition: opacity 0.8s ease;
-    cursor: pointer; overflow: hidden; padding: 20px;
+    cursor: pointer; overflow: auto; padding: 12px;
   `;
+
+  // Very subtle floating hearts (tasteful, not busy)
+  const heartBg = document.createElement("div");
+  heartBg.style.cssText = "position:absolute;inset:0;pointer-events:none;overflow:hidden;";
+  for (let i = 0; i < 12; i += 1) {
+    const h = document.createElement("span");
+    h.textContent = "♥";
+    h.style.cssText = `
+      position: absolute; bottom: -15px;
+      left: ${Math.random() * 100}%;
+      font-size: 0.4rem;
+      color: rgba(255, 90, 130, ${0.04 + Math.random() * 0.04});
+      animation: gentleFloat ${8 + Math.random() * 6}s ease-in-out ${Math.random() * 3}s infinite;
+    `;
+    heartBg.appendChild(h);
+  }
+  overlay.appendChild(heartBg);
 
   // Title
   const title = document.createElement("p");
   title.textContent = "Where Our Paths Collided";
   title.style.cssText = `
     font-family: "Great Vibes", cursive;
-    font-size: clamp(1.4rem, 3.5vw, 2.2rem);
-    color: #ffb8d0; margin: 0 0 16px;
-    text-shadow: 0 0 20px rgba(255, 150, 200, 0.4);
+    font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+    color: #f0b0c8; margin: 0 0 14px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.3);
     opacity: 0; animation: pizzaTextIn 0.7s ease-out 0.5s forwards;
     position: relative; z-index: 2;
   `;
 
-  // SVG Map container
+  // SVG Map — bigger heart + map context (region, rivers, state labels)
   const mapWrap = document.createElement("div");
   mapWrap.style.cssText = `
     position: relative; z-index: 2;
-    width: min(420px, 85vw); height: min(420px, 85vw);
+    width: min(500px, 96vw); height: min(500px, 96vw);
+    max-width: 96vmin; max-height: 96vmin;
     opacity: 0; animation: pizzaTextIn 0.8s ease-out 0.8s forwards;
+    overflow: visible;
   `;
 
-  // The SVG map — outline of eastern India region with the three cities and paths
-  // Approximate positions: Nalanda (Bihar) top-left, Bhubaneswar (Odisha) bottom-right, Kolkata middle-right
+  // Classic symmetric heart path — viewBox 0 0 400 400
+  const heartPathD = "M200 118 C100 60 40 120 40 200 C40 280 200 355 200 355 C200 355 360 280 360 200 C360 120 300 60 200 118 Z";
+
+  // Simplified Eastern India–style region (Bihar / WB / Odisha feel) — light fill so it reads as land
+  const regionPathD = "M75 140 L120 125 L200 115 L280 130 L340 165 L355 230 L330 300 L260 340 L180 345 L100 320 L55 250 Z";
+
   mapWrap.innerHTML = `
-    <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
-      <!-- Subtle region outline -->
-      <path d="M80 40 L160 30 L240 25 L310 50 L350 100 L370 170 L360 240 L340 300 L300 350 L240 380 L170 370 L110 340 L60 280 L40 210 L35 140 L50 80 Z"
-        stroke="rgba(255,180,210,0.12)" stroke-width="1" fill="rgba(255,180,210,0.02)" />
-
-      <!-- River hints (Ganges region) -->
-      <path d="M60 120 Q140 110 180 140 Q220 165 270 155 Q320 145 370 160"
-        stroke="rgba(100,160,255,0.12)" stroke-width="1.5" fill="none" stroke-dasharray="4 4" />
-      <path d="M270 155 Q280 200 290 250 Q295 290 285 340"
-        stroke="rgba(100,160,255,0.1)" stroke-width="1" fill="none" stroke-dasharray="3 3" />
-
-      <!-- Path from Nalanda to Kolkata -->
-      <path id="path-nalanda"
-        d="M105 115 Q140 135 175 155 Q210 172 245 180 Q268 186 290 190"
-        stroke="#ff6090" stroke-width="2.5" fill="none"
-        stroke-linecap="round"
-        stroke-dasharray="300" stroke-dashoffset="300">
-        <animate attributeName="stroke-dashoffset" from="300" to="0" dur="2.5s" begin="1.8s" fill="freeze" />
+    <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+      <defs>
+        <clipPath id="mapHeartClip"><path d="${heartPathD}"/></clipPath>
+        <linearGradient id="heartFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:rgba(255,230,240,0.08)"/>
+          <stop offset="100%" style="stop-color:rgba(255,200,220,0.04)"/>
+        </linearGradient>
+      </defs>
+      <!-- Heart outline — softer, warmer pink -->
+      <path d="${heartPathD}" fill="url(#heartFill)" stroke="rgba(255,140,170,0.55)" stroke-width="1.3"
+        stroke-dasharray="520" stroke-dashoffset="520">
+        <animate attributeName="stroke-dashoffset" from="520" to="0" dur="1.8s" begin="0.4s" fill="freeze"/>
+      </path>
+      <path d="${heartPathD}" stroke="rgba(255,160,190,0.2)" stroke-width="1" fill="none">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" begin="2.2s" repeatCount="indefinite"/>
       </path>
 
-      <!-- Glow for Nalanda path -->
-      <path d="M105 115 Q140 135 175 155 Q210 172 245 180 Q268 186 290 190"
-        stroke="rgba(255,96,144,0.3)" stroke-width="6" fill="none"
-        stroke-linecap="round" filter="blur(3px)"
-        stroke-dasharray="300" stroke-dashoffset="300">
-        <animate attributeName="stroke-dashoffset" from="300" to="0" dur="2.5s" begin="1.8s" fill="freeze" />
-      </path>
+      <g clip-path="url(#mapHeartClip)">
+        <!-- Zoom out: scale map content to 88% and center so nothing is cropped -->
+        <g transform="scale(0.88) translate(24, 22)">
+        <!-- Map context: land shape — warmer blush -->
+        <path d="${regionPathD}" fill="rgba(255,240,248,0.06)" stroke="rgba(255,190,210,0.12)" stroke-width="0.8"/>
+        <!-- River hint (softer blue) -->
+        <path d="M80 155 Q160 145 220 160 Q280 172 320 185" stroke="rgba(140,190,230,0.14)" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+        <path d="M250 195 Q265 250 270 300" stroke="rgba(140,190,230,0.1)" stroke-width="0.8" fill="none" stroke-dasharray="4 3"/>
+        <!-- State labels — warmer, softer -->
+        <text x="140" y="145" text-anchor="middle" font-family="Poppins, sans-serif" font-size="7" fill="rgba(255,175,195,0.45)" letter-spacing="0.08em">BIHAR</text>
+        <text x="260" y="265" text-anchor="middle" font-family="Poppins, sans-serif" font-size="7" fill="rgba(180,200,255,0.45)" letter-spacing="0.08em">ODISHA</text>
+        <text x="310" y="175" text-anchor="middle" font-family="Poppins, sans-serif" font-size="7" fill="rgba(255,210,180,0.45)" letter-spacing="0.08em">W. BENGAL</text>
+        <!-- North indicator (softer) -->
+        <text x="358" y="72" text-anchor="middle" font-family="Poppins, sans-serif" font-size="8" fill="rgba(255,235,245,0.35)" font-weight="600">N</text>
+        <path d="M358 76 L358 88 M354 80 L358 76 L362 80 M358 88 L355 85 M358 88 L361 85" stroke="rgba(255,235,245,0.25)" stroke-width="0.6" fill="none"/>
+        <!-- Map title (warmer) -->
+        <text x="200" y="108" text-anchor="middle" font-family="Poppins, sans-serif" font-size="8" fill="rgba(255,225,235,0.5)" letter-spacing="0.2em">EASTERN INDIA</text>
 
-      <!-- Path from Bhubaneswar to Kolkata -->
-      <path id="path-bbsr"
-        d="M230 330 Q245 300 260 270 Q275 240 285 215 Q288 205 290 190"
-        stroke="#60b0ff" stroke-width="2.5" fill="none"
-        stroke-linecap="round"
-        stroke-dasharray="250" stroke-dashoffset="250">
-        <animate attributeName="stroke-dashoffset" from="250" to="0" dur="2.5s" begin="1.8s" fill="freeze" />
-      </path>
+        <!-- Route: Nalanda → Kolkata (softer pink, love path) -->
+        <path d="M115 130 Q165 150 215 165 Q260 178 290 195"
+          stroke="#f088a0" stroke-width="2.2" fill="none" stroke-linecap="round"
+          stroke-dasharray="280" stroke-dashoffset="280">
+          <animate attributeName="stroke-dashoffset" from="280" to="0" dur="2.2s" begin="1.6s" fill="freeze" />
+        </path>
+        <!-- Path: Bhubaneswar → Kolkata (softer blue) -->
+        <path d="M235 320 Q255 270 272 230 Q282 205 290 195"
+          stroke="#70a8e0" stroke-width="2.2" fill="none" stroke-linecap="round"
+          stroke-dasharray="220" stroke-dashoffset="220">
+          <animate attributeName="stroke-dashoffset" from="220" to="0" dur="2.2s" begin="1.6s" fill="freeze" />
+        </path>
 
-      <!-- Glow for BBSR path -->
-      <path d="M230 330 Q245 300 260 270 Q275 240 285 215 Q288 205 290 190"
-        stroke="rgba(96,176,255,0.3)" stroke-width="6" fill="none"
-        stroke-linecap="round" filter="blur(3px)"
-        stroke-dasharray="250" stroke-dashoffset="250">
-        <animate attributeName="stroke-dashoffset" from="250" to="0" dur="2.5s" begin="1.8s" fill="freeze" />
-      </path>
+        <!-- Collision burst at Kolkata — softer glow -->
+        <circle cx="290" cy="195" r="0" fill="rgba(255,200,220,0.5)">
+          <animate attributeName="r" from="0" to="30" dur="0.6s" begin="4s" fill="freeze" />
+          <animate attributeName="opacity" from="0.4" to="0" dur="0.6s" begin="4s" fill="freeze" />
+        </circle>
+        <circle cx="290" cy="195" r="0" fill="rgba(255,160,200,0.35)">
+          <animate attributeName="r" from="0" to="18" dur="0.5s" begin="4.15s" fill="freeze" />
+          <animate attributeName="opacity" from="0.5" to="0" dur="0.5s" begin="4.15s" fill="freeze" />
+        </circle>
 
-      <!-- Collision burst at Kolkata -->
-      <circle cx="290" cy="190" r="0" fill="rgba(255,200,220,0.5)">
-        <animate attributeName="r" from="0" to="30" dur="0.8s" begin="4.3s" fill="freeze" />
-        <animate attributeName="opacity" from="0.6" to="0" dur="0.8s" begin="4.3s" fill="freeze" />
-      </circle>
-      <circle cx="290" cy="190" r="0" fill="rgba(255,100,150,0.4)">
-        <animate attributeName="r" from="0" to="18" dur="0.6s" begin="4.4s" fill="freeze" />
-        <animate attributeName="opacity" from="0.8" to="0" dur="0.6s" begin="4.4s" fill="freeze" />
-      </circle>
+        <!-- Nalanda (His Home) — warmer pink -->
+        <circle cx="115" cy="130" r="4" fill="#f088a0" opacity="0">
+          <animate attributeName="opacity" from="0" to="1" dur="0.35s" begin="1.2s" fill="freeze" />
+        </circle>
+        <circle cx="115" cy="130" r="8" stroke="#f088a0" stroke-width="1" fill="none" opacity="0">
+          <animate attributeName="opacity" from="0" to="0.5" dur="0.35s" begin="1.2s" fill="freeze" />
+          <animate attributeName="r" from="4" to="11" dur="2s" begin="1.2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" from="0.5" to="0" dur="2s" begin="1.2s" repeatCount="indefinite" />
+        </circle>
 
-      <!-- City: Nalanda, Bihar (origin) -->
-      <circle cx="105" cy="115" r="5" fill="#ff6090" opacity="0">
-        <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="1.2s" fill="freeze" />
-      </circle>
-      <circle cx="105" cy="115" r="10" stroke="#ff6090" stroke-width="1" fill="none" opacity="0">
-        <animate attributeName="opacity" from="0" to="0.4" dur="0.4s" begin="1.2s" fill="freeze" />
-        <animate attributeName="r" from="5" to="14" dur="2s" begin="1.2s" repeatCount="indefinite" />
-        <animate attributeName="opacity" from="0.4" to="0" dur="2s" begin="1.2s" repeatCount="indefinite" />
-      </circle>
+        <!-- Bhubaneswar (Her Home) — softer blue -->
+        <circle cx="235" cy="320" r="4" fill="#70a8e0" opacity="0">
+          <animate attributeName="opacity" from="0" to="1" dur="0.35s" begin="1.2s" fill="freeze" />
+        </circle>
+        <circle cx="235" cy="320" r="8" stroke="#70a8e0" stroke-width="1" fill="none" opacity="0">
+          <animate attributeName="opacity" from="0" to="0.5" dur="0.35s" begin="1.2s" fill="freeze" />
+          <animate attributeName="r" from="4" to="11" dur="2s" begin="1.2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" from="0.5" to="0" dur="2s" begin="1.2s" repeatCount="indefinite" />
+        </circle>
 
-      <!-- City: Bhubaneswar, Odisha (origin) -->
-      <circle cx="230" cy="330" r="5" fill="#60b0ff" opacity="0">
-        <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="1.2s" fill="freeze" />
-      </circle>
-      <circle cx="230" cy="330" r="10" stroke="#60b0ff" stroke-width="1" fill="none" opacity="0">
-        <animate attributeName="opacity" from="0" to="0.4" dur="0.4s" begin="1.2s" fill="freeze" />
-        <animate attributeName="r" from="5" to="14" dur="2s" begin="1.2s" repeatCount="indefinite" />
-        <animate attributeName="opacity" from="0.4" to="0" dur="2s" begin="1.2s" repeatCount="indefinite" />
-      </circle>
+        <!-- Kolkata (Where we met) — warm gold -->
+        <circle cx="290" cy="195" r="5" fill="#f0c858" opacity="0">
+          <animate attributeName="opacity" from="0" to="1" dur="0.3s" begin="4s" fill="freeze" />
+        </circle>
+        <circle cx="290" cy="195" r="5" fill="#f0c858" opacity="0">
+          <animate attributeName="opacity" values="0.95;0.5;0.95" dur="1.8s" begin="4s" repeatCount="indefinite" />
+          <animate attributeName="r" from="5" to="10" dur="1.8s" begin="4s" repeatCount="indefinite" />
+        </circle>
+        <text x="290" y="178" text-anchor="middle" font-size="20" opacity="0" fill="#f088a0">
+          ❤
+          <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="4.4s" fill="freeze" />
+        </text>
+        <!-- Tiny sparkles near Kolkata (lovely touch) -->
+        <circle cx="275" cy="168" r="1.2" fill="rgba(255,240,200,0.9)" opacity="0">
+          <animate attributeName="opacity" values="0;0.9;0" dur="2s" begin="4.8s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="308" cy="172" r="1" fill="rgba(255,220,180,0.85)" opacity="0">
+          <animate attributeName="opacity" values="0;0.85;0" dur="2.2s" begin="5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="298" cy="158" r="0.8" fill="rgba(255,235,210,0.9)" opacity="0">
+          <animate attributeName="opacity" values="0;0.9;0" dur="1.8s" begin="5.2s" repeatCount="indefinite"/>
+        </circle>
 
-      <!-- City: Kolkata (collision point) -->
-      <circle cx="290" cy="190" r="6" fill="#ffd700" opacity="0">
-        <animate attributeName="opacity" from="0" to="1" dur="0.3s" begin="4.3s" fill="freeze" />
-      </circle>
-      <circle cx="290" cy="190" r="6" fill="#ffd700" opacity="0">
-        <animate attributeName="opacity" from="0.8" to="0.3" dur="1.5s" begin="4.3s" repeatCount="indefinite" />
-        <animate attributeName="r" from="6" to="12" dur="1.5s" begin="4.3s" repeatCount="indefinite" />
-      </circle>
-
-      <!-- Heart at collision -->
-      <text x="290" y="170" text-anchor="middle" font-size="22" opacity="0" fill="#ff4070">
-        ❤
-        <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="4.6s" fill="freeze" />
-        <animate attributeName="y" from="180" to="168" dur="0.5s" begin="4.6s" fill="freeze" />
-      </text>
-
-      <!-- Labels -->
-      <text x="105" y="100" text-anchor="middle" font-family="Poppins, sans-serif" font-size="9" fill="#ff6090" letter-spacing="0.05em" opacity="0">
-        NALANDA, BIHAR
-        <animate attributeName="opacity" from="0" to="0.9" dur="0.4s" begin="1.4s" fill="freeze" />
-      </text>
-      <text x="105" y="88" text-anchor="middle" font-family="Great Vibes, cursive" font-size="13" fill="#ffb0d0" opacity="0">
-        His Home
-        <animate attributeName="opacity" from="0" to="0.7" dur="0.4s" begin="1.6s" fill="freeze" />
-      </text>
-
-      <text x="230" y="355" text-anchor="middle" font-family="Poppins, sans-serif" font-size="9" fill="#60b0ff" letter-spacing="0.05em" opacity="0">
-        BHUBANESWAR, ODISHA
-        <animate attributeName="opacity" from="0" to="0.9" dur="0.4s" begin="1.4s" fill="freeze" />
-      </text>
-      <text x="230" y="343" text-anchor="middle" font-family="Great Vibes, cursive" font-size="13" fill="#a0d0ff" opacity="0">
-        Her Home
-        <animate attributeName="opacity" from="0" to="0.7" dur="0.4s" begin="1.6s" fill="freeze" />
-      </text>
-
-      <text x="330" y="185" text-anchor="start" font-family="Poppins, sans-serif" font-size="9" fill="#ffd700" letter-spacing="0.05em" opacity="0">
-        KOLKATA
-        <animate attributeName="opacity" from="0" to="0.9" dur="0.3s" begin="4.5s" fill="freeze" />
-      </text>
-      <text x="330" y="199" text-anchor="start" font-family="Great Vibes, cursive" font-size="13" fill="#ffe080" opacity="0">
-        Where We Found Each Other
-        <animate attributeName="opacity" from="0" to="0.8" dur="0.5s" begin="4.8s" fill="freeze" />
-      </text>
+        <!-- Labels -->
+        <text x="130" y="118" text-anchor="middle" font-family="Poppins, sans-serif" font-size="9" fill="#f088a0" letter-spacing="0.04em" opacity="0">
+          NALANDA
+          <animate attributeName="opacity" from="0" to="0.95" dur="0.4s" begin="1.4s" fill="freeze" />
+        </text>
+        <text x="130" y="108" text-anchor="middle" font-family="Great Vibes, cursive" font-size="13" fill="#f5b0c8" opacity="0">
+          His Home
+          <animate attributeName="opacity" from="0" to="0.9" dur="0.4s" begin="1.5s" fill="freeze" />
+        </text>
+        <text x="235" y="322" text-anchor="middle" font-family="Poppins, sans-serif" font-size="9" fill="#70a8e0" letter-spacing="0.04em" opacity="0">
+          BBSR
+          <animate attributeName="opacity" from="0" to="0.95" dur="0.4s" begin="1.4s" fill="freeze" />
+        </text>
+        <text x="235" y="312" text-anchor="middle" font-family="Great Vibes, cursive" font-size="13" fill="#a0c8f0" opacity="0">
+          Her Home
+          <animate attributeName="opacity" from="0" to="0.9" dur="0.4s" begin="1.5s" fill="freeze" />
+        </text>
+        <text x="290" y="208" text-anchor="middle" font-family="Poppins, sans-serif" font-size="9" fill="#f0c858" letter-spacing="0.04em" opacity="0">
+          KOLKATA
+          <animate attributeName="opacity" from="0" to="0.95" dur="0.3s" begin="4.2s" fill="freeze" />
+        </text>
+        </g>
+      </g>
     </svg>
   `;
 
-  // Bottom quote
+  // "Where We Found Each Other" — HTML below map, warmer and lovelier
+  const foundLabel = document.createElement("p");
+  foundLabel.textContent = "Where We Found Each Other";
+  foundLabel.style.cssText = `
+    font-family: "Great Vibes", cursive;
+    font-size: clamp(1.3rem, 3.6vw, 1.8rem);
+    color: #f5e0a0;
+    text-shadow: 0 0 20px rgba(255, 220, 150, 0.25), 0 1px 10px rgba(0,0,0,0.2);
+    margin: 14px 0 0;
+    text-align: center;
+    max-width: 92vw;
+    opacity: 0;
+    animation: pizzaTextIn 0.7s ease-out 4.6s forwards;
+    position: relative; z-index: 2;
+  `;
+
+  // Bottom quote — softer, warmer
   const quote = document.createElement("p");
   quote.textContent = "Two different cities, one destiny.";
   quote.style.cssText = `
     font-family: "Playfair Display", serif; font-style: italic;
-    font-size: clamp(0.8rem, 2vw, 1rem);
-    color: rgba(255, 200, 220, 0.5); margin: 16px 0 0;
+    font-size: clamp(0.95rem, 2.3vw, 1.15rem);
+    color: rgba(255, 215, 230, 0.6); margin: 12px 0 0;
     opacity: 0; animation: pizzaTextIn 0.6s ease-out 5.5s forwards;
     position: relative; z-index: 2;
   `;
@@ -1592,6 +1761,7 @@ const triggerMapEasterEgg = () => {
 
   overlay.appendChild(title);
   overlay.appendChild(mapWrap);
+  overlay.appendChild(foundLabel);
   overlay.appendChild(quote);
   overlay.appendChild(hint);
   document.body.appendChild(overlay);
