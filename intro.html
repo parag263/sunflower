@@ -160,7 +160,32 @@
 
     <div class="skip" id="skip">tap to skip</div>
 
+    <!-- Intro music: add your own file at assets/intro-song.mp3 (e.g. "You Are In Love" by Taylor Swift) -->
+    <audio id="intro-music" loop preload="auto" style="display:none;">
+      <source src="assets/intro-song.mp3" type="audio/mpeg" />
+    </audio>
+
     <script>
+      // Intro music — start when intro begins (after body fade-in)
+      (function() {
+        const audio = document.getElementById("intro-music");
+        if (!audio) return;
+        const playIntroMusic = () => {
+          audio.volume = 0.18;
+          audio.play().catch(() => {}); // autoplay may be blocked until user interacts
+        };
+        // Start shortly after the page fade-in (matches intro sequence start)
+        setTimeout(playIntroMusic, 400);
+        // If autoplay was blocked, start on first tap anywhere
+        function startOnTap() {
+          if (audio.paused && audio.readyState >= 2) {
+            playIntroMusic();
+            document.body.removeEventListener("click", startOnTap);
+          }
+        }
+        document.body.addEventListener("click", startOnTap);
+      })();
+
       // Generate floating hearts
       const heartContainer = document.getElementById("hearts");
       for (let i = 0; i < 40; i++) {
@@ -201,11 +226,28 @@
       let currentIdx = 0;
       let cancelled = false;
 
+      const saveIntroMusicTime = () => {
+        const introMusic = document.getElementById("intro-music");
+        if (introMusic) {
+          try {
+            const t = String(introMusic.currentTime);
+            localStorage.setItem("introMusicCurrentTime", t);
+            sessionStorage.setItem("introMusicCurrentTime", t);
+          } catch(e) {}
+        }
+      };
       const goToNextPage = () => {
         try { localStorage.setItem("valentine-intro-seen", "true"); } catch(e) {}
+        saveIntroMusicTime();
         document.body.classList.add("exit");
-        setTimeout(() => { window.location.href = "index.html"; }, 850);
+        setTimeout(() => {
+          saveIntroMusicTime();
+          window.location.href = "index.html";
+        }, 850);
       };
+      window.addEventListener("pagehide", saveIntroMusicTime);
+      window.addEventListener("beforeunload", saveIntroMusicTime);
+      setInterval(saveIntroMusicTime, 1200);
 
       skipBtn.addEventListener("click", () => {
         cancelled = true;

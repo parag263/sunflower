@@ -3,6 +3,8 @@
 A small valentine experience with a secret gate, yes/no flow, and several easter eggs.  
 This file lists **all easter eggs** and every way to trigger them (including by **clicking somewhere on the screen**).
 
+**Tip:** Serve the project over HTTP (e.g. `python -m http.server` in the project folder) and open the site at `http://localhost:8000/intro.html`. That way the intro song continues across intro → auth → valentine without restarting. Opening files directly as `file://` can prevent music position from persisting.
+
 ---
 
 ## Easter eggs and how to trigger them
