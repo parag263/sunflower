@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Our Secret</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="page page-auth">
+    <div class="curtain" aria-hidden="true"></div>
+    <div class="sky" aria-hidden="true">
+      </div>
+    
+    <img
+      class="page-bg-img auth-bg-img"
+      src="https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=1200&q=80&fit=crop"
+      alt=""
+      aria-hidden="true"
+      loading="eager"
+    />
+
+    <main class="shell">
+      <section class="card auth-card">
+        <img
+          class="card-accent-img auth-accent"
+          src="https://images.unsplash.com/photo-1470509037663-253afd7f0f51?w=400&q=80&fit=crop&crop=center"
+          alt=""
+          aria-hidden="true"
+        />
+        <div class="badge">🌻 My Sunflower</div>
+        <h1>My Dearest Love</h1>
+        <p class="poem">
+          "Like a sunflower that always turns its face towards the sun,<br />
+          I find my soul always turning towards you."
+        </p>
+
+        <form id="auth-form" class="auth-form" novalidate>
+          <label for="secret-answer" class="label">
+            To enter my heart, tell me:<br/>
+            <em>What was the name of the first theater we went to?</em>
+          </label>
+          <input
+            id="secret-answer"
+            name="answer"
+            type="text"
+            placeholder="Write the secret here..."
+            autocomplete="off"
+            required
+          />
+          <p id="auth-error" class="error hidden">
+            Bhuli Bhuli... ♡
+          </p>
+          <button type="submit" class="primary-btn auth-unlock-btn">
+            Unlock Our Memory
+          </button>
+        </form>
+
+        <p class="hint">The day we held hands for the first time.</p>
+      </section>
+    </main>
+
+    <img
+      class="sunflower-bottom"
+      src="assets/sunflower-field.png"
+      alt=""
+      aria-hidden="true"
+    />
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

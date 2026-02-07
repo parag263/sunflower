@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Moon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="page page-valentine">
+    <div class="curtain" aria-hidden="true"></div>
+    <div class="sky" aria-hidden="true"></div>
+    <div class="heart-field" aria-hidden="true"></div>
+    <div class="moon-bg" aria-hidden="true">
+      <img
+        class="moon-photo"
+        src="https://images.unsplash.com/photo-1532693322450-2cb5c511067d?w=400&q=80&fit=crop"
+        alt=""
+      />
+    </div>
+    <img
+      class="page-bg-img valentine-bg-img"
+      src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1400&q=80&fit=crop"
+      alt=""
+      aria-hidden="true"
+      loading="eager"
+    />
+    
+    <main class="shell">
+      <section class="card valentine-card">
+        <div class="badge">For My Moon 🌙</div>
+        <h1>Will you be my Valentine?</h1>
+        <p class="poem">You are my universe, today and always.</p>
+
+        <div class="button-row">
+          <button id="yes-btn" class="primary-btn">Yes, a thousand times!</button>
+          <button id="no-btn" class="ghost-btn">No...</button>
+        </div>
+
+        <p id="no-message" class="no-message hidden" aria-live="polite">
+          The stars have already decided... it's a Yes. 💜
+        </p>
+
+        <div id="dog-scene" class="dog-scene hidden" aria-hidden="true">
+          <div class="dog">
+            <div class="dog-body">
+              <div class="dog-head">
+                <div class="dog-ear left"></div>
+                <div class="dog-ear right"></div>
+                <div class="dog-face">
+                  <div class="dog-eye left"></div>
+                  <div class="dog-eye right"></div>
+                  <div class="dog-nose"></div>
+                  <div class="dog-tongue"></div>
+                </div>
+              </div>
+              <div class="dog-torso"></div>
+              <div class="dog-collar"></div>
+              <p class="dog-name">Kiya</p>
+              <div class="dog-tail"></div>
+              <div class="dog-leg front-left"></div>
+              <div class="dog-leg front-right"></div>
+              <div class="dog-leg back-left"></div>
+              <div class="dog-leg back-right"></div>
+            </div>
+            <div class="dog-heart" aria-hidden="true">❤️</div>
+          </div>
+        </div>
+
+        <div id="answer-card" class="postcard hidden" aria-live="polite">
+          <!-- Photo stickers scattered on the postcard -->
+          <img class="pc-sticker pc-sticker-1" src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=100&h=100&q=80&fit=crop" alt="" aria-hidden="true" />
+          <img class="pc-sticker pc-sticker-2" src="https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=100&h=100&q=80&fit=crop" alt="" aria-hidden="true" />
+          <img class="pc-sticker pc-sticker-3" src="https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=100&h=100&q=80&fit=crop" alt="" aria-hidden="true" />
+          <img class="pc-sticker pc-sticker-4" src="https://images.unsplash.com/photo-1518568403628-df55701ade9e?w=80&h=80&q=80&fit=crop" alt="" aria-hidden="true" />
+          <img class="pc-sticker pc-sticker-5" src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=100&h=100&q=80&fit=crop" alt="" aria-hidden="true" />
+          <span class="pc-sticker pc-sticker-6">💌</span>
+          <img class="pc-sticker pc-sticker-7" src="https://images.unsplash.com/photo-1494894194458-0174142560c0?w=80&h=80&q=80&fit=crop" alt="" aria-hidden="true" />
+          <span class="pc-sticker pc-sticker-8">💋</span>
+
+          <div class="postcard-inner">
+            <div class="postcard-message">
+              <p class="postcard-greeting">My Dearest Moon,</p>
+              <p class="postcard-body">
+                You said <strong>Yes</strong> and my whole universe lit up.
+              </p>
+              <p class="postcard-body">
+                Every heartbeat whispers your name. Every star I see is just a reflection of your smile.
+                I promise to love you louder than words, deeper than oceans, and longer than forever.
+              </p>
+              <p class="postcard-body postcard-xoxo">
+                xoxo xoxo xoxo
+              </p>
+              <p class="postcard-sign">— Yours, in this life and the next 💋</p>
+            </div>
+            <div class="postcard-address">
+              <div class="postcard-stamp">
+                <img class="stamp-photo" src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=120&h=140&q=80&fit=crop" alt="" aria-hidden="true" />
+                <span class="stamp-overlay">LOVE</span>
+              </div>
+              <div class="postcard-divider"></div>
+              <div class="postcard-to-block">
+                <p class="postcard-to-label">DELIVERED WITH LOVE TO:</p>
+                <p class="postcard-to-name">My Beautiful Valentine</p>
+                <p class="postcard-to-addr">14-FEB</p>
+              </div>
+              <div class="postcard-barcode" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <p class="postcard-tracking">LOVE-2026-FOREVER-YOURS</p>
+            </div>
+          </div>
+          <div class="postcard-footer">
+            <p class="postcard-footer-msg">✓ Valentine's card delivered with infinite love</p>
+            <button id="try-again" class="ghost-btn postcard-replay-btn">Replay the magic</button>
+          </div>
+        </div>
+        
+      </section>
+    </main>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
