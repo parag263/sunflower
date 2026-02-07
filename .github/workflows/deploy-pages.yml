@@ -1,0 +1,52 @@
+# Deploy to GitHub Pages and inject firebase-config.js from a secret
+# so Firestore works on the deployed site without committing API keys.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject Firebase config
+        env:
+          FIREBASE_CONFIG_JS: ${{ secrets.FIREBASE_CONFIG_JS }}
+        run: |
+          if [ -n "$FIREBASE_CONFIG_JS" ]; then
+            echo "$FIREBASE_CONFIG_JS" > firebase-config.js
+            echo "firebase-config.js created from secret"
+          else
+            echo "FIREBASE_CONFIG_JS secret not set — Firestore will be disabled on deployed site"
+            cp firebase-config.example.js firebase-config.js
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -5,6 +5,27 @@ This file lists **all easter eggs** and every way to trigger them (including by 
 
 **Tip:** Serve the project over HTTP (e.g. `python -m http.server` in the project folder) and open the site at `http://localhost:8000/intro.html`. That way the intro song continues across intro → auth → valentine without restarting. Opening files directly as `file://` can prevent music position from persisting.
 
+### Deploying to GitHub Pages (Firestore / data)
+
+The repo does **not** commit `firebase-config.js` (it’s in `.gitignore`), so the default “Deploy from a branch” build would serve the site **without** Firebase and no data would reach Firestore.
+
+To have Firestore work on the deployed site:
+
+1. **Use the GitHub Actions deploy**  
+   - In the repo: **Settings → Pages → Build and deployment**: set **Source** to **GitHub Actions**.
+
+2. **Add your Firebase config as a secret**  
+   - Copy the **entire contents** of your local `firebase-config.js` (the `export const firebaseConfig = { ... };` file).  
+   - In the repo: **Settings → Secrets and variables → Actions → New repository secret**.  
+   - Name: `FIREBASE_CONFIG_JS`, Value: paste the full file content.  
+   - Save. The workflow will write this as `firebase-config.js` during deploy so it’s never committed.
+
+3. **Allow your Pages domain in Firebase**  
+   - In [Firebase Console](https://console.firebase.google.com/) → your project → **Build → Authentication → Settings → Authorized domains** (or **Hosting** if you use it).  
+   - Add your GitHub Pages host, e.g. `parag263.github.io` (and the repo subdomain if different, e.g. `*.github.io` or the exact origin).
+
+After that, pushes to `main` will run the workflow and deploy a build that includes the injected config, so Firestore writes will work on the live site.
+
 ---
 
 ## Easter eggs and how to trigger them
